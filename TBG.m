@@ -302,9 +302,7 @@ classdef TBG < handle
                 display (1,1) logical = 0;
             end
             if display
-                fig_network = figure();
-                ax_network = axes(fig_network);
-                axis(ax_network, 'equal');
+                ax_network = obj.plot_network();
             end
             % TODO improve searching algo
             % now it is O(M^2) and with for loop
@@ -383,6 +381,23 @@ classdef TBG < handle
 
         function plot_3d(obj)
         end
+
+        function ax_network = plot_network(obj)
+            fig_network = figure();
+            ax_network = axes(fig_network);
+            axis(ax_network, 'equal');
+            scatter(ax_network, obj.g_network(1, :), obj.g_network(2, :),...
+                'r', 'filled');
+            hold on;
+            scatter(ax_network, obj.g_network(1, :) + obj.KD(1),...
+                obj.g_network(2, :) + obj.KD(2), 'b', 'filled');
+            axis(ax_network, 'equal');
+            hold on;
+            viscircles([0, 0], norm(obj.KD) * obj.network_cutoff_number,...
+                Color='black', LineStyle='--');
+            hold off;
+        end
+
 
     end
 end

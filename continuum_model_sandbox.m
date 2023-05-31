@@ -1,4 +1,5 @@
 close all;
+addpath(genpath([pwd, '\distmesh']));
 % note:
 % all 1 dimen vectors are column vectors
 
@@ -6,7 +7,7 @@ close all;
 % plot lattice space or not
 display_mode = true;
 % g network cutoff multiplier number
-network_cutoff_number = 6;
+network_cutoff_number = 8;
 % tolerance
 tol = 1e-1;
 
@@ -26,7 +27,7 @@ a = 1;
 vf = 1;
 hbar = 1;
 % first order fourier component 
-w = 0.05;
+w = 0.0005;
 
 % hopping matrix
 w_phase = exp(1i*2*pi/3);
@@ -50,8 +51,8 @@ K = 2 * pi / a * [1/3; sqrt(3)/9];
 Kp = 2 * pi / a * [1/3; -sqrt(3)/9];
 
 % commensurate index and angle
-cm = 5;
-cn = 4;
+cm = 6;
+cn = 5;
 ctheta = acos((cn^2 + 4*cn*cm + cm^2)/(2 * (cn^2 + cn*cm + cm^2)));
 % rotation matrix
 % note that layer2 is rotated counterclockwise ctheta
@@ -127,8 +128,8 @@ if display_mode
     hold on;
     scatter(g_network(1, :) + KD(1), g_network(2, :) + KD(2), 'b', 'filled');
     axis equal;
-    quiver([0, 0, 0], [0, 0, 0], g_deltas(1, :), g_deltas(2, :), 'off');
-    quiver([0, 0], [0, 0], [g1(1), g2(1)], [g1(2), g2(2)], 'off');
+    quiver([0, 0, 0], [0, 0, 0], g_deltas(1, :), g_deltas(2, :), 'AutoScale', 'off');
+    quiver([0, 0], [0, 0], [g1(1), g2(1)], [g1(2), g2(2)], 'AutoScale', 'off');
 end
 
 % TOSTUDY does the number of states in layer1 have to equal
@@ -193,8 +194,7 @@ k_line = [(gamma - K_origin) * grain + K_origin, ...
     (K_origin - M_point) * grain + M_point];
 k_line_length = [vecnorm((gamma - K_origin) * grain, 2), ...
     vecnorm((M_point - gamma) * grain, 2) + norm(gamma - K_origin), ...
-    vecnorm((K_origin - M_point) * grain, 2) + norm(gamma - K_origin) +...
-    norm(M_point - gamma)];
+    vecnorm((K_origin - M_point) * grain, 2) + norm(gamma - K_origin) + norm(M_point - gamma)];
 
 
 

@@ -89,8 +89,12 @@ classdef TBG < handle
         
         % displacement of q(k) to its three nearest neighbours
         g_deltas;
-        g_network;
+        g_network_l1;
+        g_network_l2;
 
+        % number of g's in layer 1 and layer 2
+        M1;
+        M2;
         % number of all g's in cutoff range
         M;
 
@@ -250,21 +254,26 @@ classdef TBG < handle
             % find all g vectors in cutoff range
             search_limit = ceil(3 * obj.network_cutoff_number);
             [search_range_x, search_range_y] = meshgrid(-search_limit:search_limit);
-            obj.g_network = [obj.g1, obj.g2] *...
+            obj.g_network_l1 = [obj.g1, obj.g2] *...
                 [reshape(search_range_x, 1, []); reshape(search_range_y, 1, [])];
-            obj.g_network = obj.g_network(:, vecnorm(obj.g_network + obj.KD, 2, 1)<=...
+            obj.g_network_l2 = obj.g_network_l1 + obj.KD;
+            obj.g_network_l1 = obj.g_network_l1(:, vecnorm(obj.g_network_l1, 2, 1)<=...
+                obj.network_cutoff_number * norm(obj.KD));
+            obj.g_network_l2 = obj.g_network_l2(:, vecnorm(obj.g_network_l2, 2, 1)<=...
                 obj.network_cutoff_number * norm(obj.KD));
             
-            obj.M = size(obj.g_network, 2);
+            obj.M1 = size(obj.g_network_l1, 2);
+            obj.M2 = size(obj.g_network_l2, 2);
+            obj.M = obj.M1 + obj.M2;
             
             % init H
-            obj.H_inter = zeros(2*obj.M);
+            obj.H_inter = zeros(2*obj.M1, 2*obj.M2);
             
             % fix H inter
             calculate_hinter(obj, nvargs.display);
             % fix H
-            obj.H = [zeros(2*obj.M), obj.H_inter;...
-                obj.H_inter', zeros(2*obj.M)];
+            obj.H = [zeros(2*obj.M1), obj.H_inter;...
+                obj.H_inter', zeros(2*obj.M2)];
 
             % prepare K gamma M K line
             obj.K_origin = [0; 0];
@@ -293,8 +302,8 @@ classdef TBG < handle
             fprintf('w = %d\n', obj.w)
         end
 
-        function display_all(obj)
-        end
+        % function display_all(obj)
+        % end
 
         function calculate_hinter(obj, display)
             arguments
@@ -306,18 +315,18 @@ classdef TBG < handle
             end
             % TODO improve searching algo
             % now it is O(M^2) and with for loop
-            for ii = 1:obj.M
-                for jj = 1:obj.M
+            for ii = 1:obj.M1
+                for jj = 1:obj.M2
                     % ii in layer1, jj in layer2
-                    dist = (obj.g_network(:, jj) + obj.KD) - obj.g_network(:, ii);
+                    dist = obj.g_network_l2(:, jj) - obj.g_network_l1(:, ii);
                     for dd = 1:3
                         if norm(obj.g_deltas(:, dd) - dist) <= obj.tol
                             % not sure if conjugate should be reversed 
                             obj.H_inter(ii*2-1:ii*2, jj*2-1:jj*2) = obj.Ts(:, :, dd)';
                             % for test if all connections are found
                             if display   
-                                cur_line = [obj.g_network(:, ii), ...
-                                    obj.g_network(:, jj) + obj.KD];
+                                cur_line = [obj.g_network_l1(:, ii), ...
+                                    obj.g_network_l2(:, jj)];
                                 line(ax_network, cur_line(1, :), cur_line(2, :));
                             end
                         end
@@ -331,23 +340,29 @@ classdef TBG < handle
             % TODO change the loop to vectorization
             
             k = k(:);
-            for ii = 1:obj.M
-                cur_k_l1 = k + obj.g_network(:, ii);
-                cur_k_l2 = cur_k_l1 + obj.KD;
+            % layer 1 blocks
+            for ii = 1:obj.M1
+                cur_k_l1 = k + obj.g_network_l1(:, ii);
                 obj.H(2*ii - 1, 2*ii) = obj.hbar * obj.vf * ...
                     (cur_k_l1(1) - 1i * cur_k_l1(2)) * exp(-1i * obj.ctheta/2);
                 obj.H(2*ii, 2*ii - 1) = obj.hbar * obj.vf * ...
                     (cur_k_l1(1) + 1i * cur_k_l1(2)) * exp(1i * obj.ctheta/2);
-                obj.H(2*ii - 1 + 2*obj.M, 2*ii + 2*obj.M) = obj.hbar * obj.vf * ...
-                    (cur_k_l2(1) - 1i * cur_k_l2(2)) * exp(1i * obj.ctheta/2);
-                obj.H(2*ii + 2*obj.M, 2*ii - 1 + 2*obj.M) = obj.hbar * obj.vf * ...
-                    (cur_k_l2(1) + 1i * cur_k_l2(2)) * exp(-1i * obj.ctheta/2);
+                
             end
+            % layer 2 blocks
+            for ii = 1:obj.M2
+                cur_k_l2 = k + obj.g_network_l2(:, ii);
+                obj.H(2*ii - 1 + 2*obj.M1, 2*ii + 2*obj.M1) = obj.hbar * obj.vf * ...
+                    (cur_k_l2(1) - 1i * cur_k_l2(2)) * exp(1i * obj.ctheta/2);
+                obj.H(2*ii + 2*obj.M1, 2*ii - 1 + 2*obj.M1) = obj.hbar * obj.vf * ...
+                    (cur_k_l2(1) + 1i * cur_k_l2(2)) * exp(-1i * obj.ctheta/2); 
+            end
+
         end
 
         function plot_line(obj)
             tic
-            obj.all_E_line = zeros(4*obj.M, size(obj.k_line, 2));
+            obj.all_E_line = zeros(2*obj.M, size(obj.k_line, 2));
             for ind = 1:size(obj.k_line, 2)
                 k = obj.k_line(:, ind);
                 obj.calculate_h(k);
@@ -355,14 +370,15 @@ classdef TBG < handle
             end
             fig_line = figure();
             ax_line = axes(fig_line);
-            for ii = 1:4*obj.M
+            for ii = 1:2*obj.M
                 plot(ax_line, obj.k_line_length, obj.all_E_line(ii, :));
                 hold on;
             end 
             hold off;
             fig_line_zoomin = figure();
             ax_line_zoomin = axes(fig_line_zoomin);
-            for ii = 2*obj.M-5:2*obj.M+6
+            for ii = obj.M-min(5, max(obj.M2, obj.M1)):...
+                    obj.M+min(6, max(obj.M2, obj.M1))
                 plot(ax_line_zoomin, obj.k_line_length, obj.all_E_line(ii, :));
                 hold on;
             end
@@ -373,24 +389,24 @@ classdef TBG < handle
                 xticks(ax, line_ticks);
                 xticklabels(ax, {'K', '\Gamma', 'M', 'K'});
             end
-            vf_e = (obj.all_E_line(2*obj.M+1, 5) - obj.all_E_line(2*obj.M+1, 1)) / ...
+            vf_e = (obj.all_E_line(obj.M+1, 5) - obj.all_E_line(obj.M+1, 1)) / ...
                 (obj.k_line_length(5) - obj.k_line_length(1));
             title(ax_line_zoomin, sprintf('effective vf / vf_0 %d', vf_e));
             toc
         end
 
-        function plot_3d(obj)
-        end
+        % function plot_3d(obj)
+        % end
 
         function ax_network = plot_network(obj)
             fig_network = figure();
             ax_network = axes(fig_network);
             axis(ax_network, 'equal');
-            scatter(ax_network, obj.g_network(1, :), obj.g_network(2, :),...
+            scatter(ax_network, obj.g_network_l1(1, :), obj.g_network_l1(2, :),...
                 'r', 'filled');
             hold on;
-            scatter(ax_network, obj.g_network(1, :) + obj.KD(1),...
-                obj.g_network(2, :) + obj.KD(2), 'b', 'filled');
+            scatter(ax_network, obj.g_network_l2(1, :),...
+                obj.g_network_l2(2, :), 'b', 'filled');
             axis(ax_network, 'equal');
             hold on;
             viscircles([0, 0], norm(obj.KD) * obj.network_cutoff_number,...

@@ -289,7 +289,7 @@ classdef TBG < handle
                 norm(obj.M_point - obj.gamma)];
 
             % prepare 3d mesh
-            % TODO improve to hexagon shape
+            % TODO improve to hexagons shape
 
             obj.display_info();
 

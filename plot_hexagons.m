@@ -1,7 +1,7 @@
 % TODO optimize the code
 % see plot_hexagon_voronoi for a second method
 
-function plot_hexagon(a1, a2, line_color, scale, mirrored, gamma_center)
+function plot_hexagons(a1, a2, line_color, scale, mirrored, gamma_center)
 % PLOT_HEXAGON Summary of this function goes here
 % plot graphene like hexagon patterns
 % Detailed explanation goes here

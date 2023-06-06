@@ -83,9 +83,9 @@ B2 = -cm/(cm^2+cn^2+cm*cn) * rm1*b1 + cn/(cm^2+cn^2+cm*cn) * rm1*b2;
 if display_mode
     fig1 = figure(1);
     set(fig1, 'Name', sprintf('Real space (m,n) = (%d, %d)', cm, cn));
-    plot_hexagon(a1l1, a2l1, 'r', 3, 1, false);
-    plot_hexagon(a1l2, a2l2, 'b', 3, 1, false);
-    plot_hexagon(A1, A2, [0.5, 0.5, 0.5], 1, 1, false);
+    plot_hexagons(a1l1, a2l1, 'r', 3, 1, false);
+    plot_hexagons(a1l2, a2l2, 'b', 3, 1, false);
+    plot_hexagons(A1, A2, [0.5, 0.5, 0.5], 1, 1, false);
 end
 % K and Kp in layer1 and 2
 K1 = rm1 * K;
@@ -96,9 +96,9 @@ K2p = rm2 * Kp;
 if display_mode
     fig2 = figure(2);
     set(fig2, 'Name', 'Reciprocal space');
-    plot_hexagon(rm1*b1, -rm1*b2, 'r', 1, -1, true);
-    plot_hexagon(rm2*b1, -rm2*b2, 'b', 1, -1, true);
-    plot_hexagon(B1, -B2, [0.5, 0.5, 0.5], 3, 1, true);
+    plot_hexagons(rm1*b1, -rm1*b2, 'r', 1, -1, true);
+    plot_hexagons(rm2*b1, -rm2*b2, 'b', 1, -1, true);
+    plot_hexagons(B1, -B2, [0.5, 0.5, 0.5], 3, 1, true);
 end
 
 % construct g vector network space
@@ -178,7 +178,7 @@ M = size(g_network, 2);
 
 % solve for all q's and connect
  
-% plot dispersion in hexagonal region
+% plot dispersion in hexagonsal region
 figure(5)
 [k_space, t] = distmesh2d(@(p) sqrt(sum(p.^2, 2))-1.5*norm(Ks), @huniform,...
     norm(Ks)/30, [-2*norm(Ks), -2*norm(Ks); 2*norm(Ks), 2*norm(Ks)], []);

@@ -1,6 +1,6 @@
 % plot hexagon with voronoi method
 % TODO remove extra outer lines 
-function plot_hexagon_voronoi(b1_input, b2_input, color, scale)
+function plot_hexagons_voronoi(b1_input, b2_input, color, scale)
     b1 = b1_input(:);
     b2 = b2_input(:);
     grid_start = scale * (-10);

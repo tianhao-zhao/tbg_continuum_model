@@ -1,3 +1,4 @@
+addpath(genpath([pwd, '\utilities']));
 % monolayer graphene fig
 % 1. real space
 % 2. reciprocal space
@@ -10,9 +11,9 @@ fig1 = figure();
 fig2 = figure();
 fig3 = figure();
 % in pixels
-fig1.Position = [0, 0, 1500, 1000];
-fig2.Position = [0, 0, 1000, 1000];
-fig3.Position = [0, 0, 1500, 1000];
+fig1.Position = [0, 0, 1000, 1000];
+fig2.Position = [0, 0, 800, 1000];
+fig3.Position = [0, 0, 1000, 1000];
 
 ax1 = axes(fig1);
 ax2 = axes(fig2);
@@ -107,6 +108,11 @@ ax3.XLabel.String = 'k_x';
 ax3.XLabel.FontSize = 18*lw;
 ax3.YLabel.String = 'k_y';
 ax3.YLabel.FontSize = 18*lw;
+
+% remove all margin
+tighten_margin(fig1, ax1);
+tighten_margin(fig2, ax2);
+tighten_margin(fig3, ax3);
 
 % save to figures/thesis_figures
 addpath(genpath([pwd, '\figures']));

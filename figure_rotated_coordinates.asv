@@ -1,0 +1,18 @@
+% linewidth
+lw = 1.5;
+len = 1;
+
+fig = figure();
+ax = axes(fig);
+plot_single_hexagon(ax, [0, 0], 1, pi/6, 0, lw);
+add_local_coordinates(ax, [sqrt(3)/2, 1/2], 0, len, [0.5, 0.5, 0.5], lw, '--');
+add_local_coordinates(ax, [sqrt(3)/2, 1/2], pi/6, len, 'black', lw, '-');
+add_local_coordinates(ax, [sqrt(3)/2, -1/2], 0, len, [0.5, 0.5, 0.5], lw, '--');
+add_local_coordinates(ax, [sqrt(3)/2, -1/2], -pi/6, len, 'black', lw, '-');
+add_angle_indicator(ax, [sqrt(3)/2, 1/2], 0, pi/6, 1/4*len, '  \theta = \pi / 6',...
+    'black');
+add_angle_indicator(ax, [sqrt(3)/2, -1/2], 0, -pi/6, 1/4*len, '  \theta = -\pi / 6',...
+    'black');
+
+% add q vector symbol
+qx = 

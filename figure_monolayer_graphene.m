@@ -42,6 +42,13 @@ hold(ax1, 'on');
 quiver(ax1, [0, 0, 0], -sqrt(3)*[1, 1, 1],...
     [1, -1/2, -1/2], [0, sqrt(3)/2, -sqrt(3)/2], AutoScale='off', LineWidth=2*lw);
 hold(ax1, 'on');
+% plot unit cell of A and B
+line(ax1, a*[-2, -1/2, 1, -1/2, -2], a*[0, sqrt(3)/2, 0, -sqrt(3)/2, 0], 'LineStyle', '--',...
+    'LineWidth', 2*lw, 'Color', [0.5, 0.5, 0.5]);
+hold(ax1, 'on');
+line(ax1, a*[0, 3/2, 3, 3/2, 0], a*[0, sqrt(3)/2, 0, -sqrt(3)/2, 0], 'LineStyle', '--',...
+    'LineWidth', 2*lw, 'Color', [0.5, 0.5, 0.5]);
+hold(ax1, 'on');
 
 text(ax1, -0.4, 0, 'A', FontSize=18*lw);
 hold(ax1, 'on');
@@ -79,6 +86,8 @@ hold(ax2, 'off');
 axis(ax2, 'off');
 %ax2.PlotBoxAspectRatio = [0.5, 1, 1];
 %ax2.Title.String = '(b) First Brillouin zone in reciprocal space';
+
+
 % 3d band
 kmax = 2.5;
 gran = 100;
@@ -101,6 +110,17 @@ yy = xx;
 surf(ax3, xx, yy, Ep, FaceColor='interp', LineStyle='none');
 hold(ax3, 'on');
 surf(ax3, xx, yy, -Ep, FaceColor="interp", LineStyle="none");
+hold(ax3, 'on');
+% add K hexagon
+Ks = 2/3 * [1/2; sqrt(3)/6] * 2 * pi / a;
+a60 = pi / 3;
+rm60 = [[cos(a60), -sin(a60)];[sin(a60), cos(a60)]];
+for ii = 1:6
+    temp_K = rm60 * Ks(:, ii);
+    Ks = [Ks, temp_K];
+end
+line(ax3, Ks(1, :), Ks(2, :), zeros(1, 7), LineWidth=2*lw, Color='black');
+
 hold(ax3, 'off');
 axis(ax3, 'equal');
 %ax3.Title.String = '(c) Band structure';
@@ -108,6 +128,7 @@ ax3.XLabel.String = 'k_x';
 ax3.XLabel.FontSize = 18*lw;
 ax3.YLabel.String = 'k_y';
 ax3.YLabel.FontSize = 18*lw;
+
 
 % remove all margin
 tighten_margin(fig1, ax1);

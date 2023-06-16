@@ -22,7 +22,7 @@ function plot_single_hexagon(ax, center, l, r, highlight, linewidth)
                     'MarkerFaceColor', [1, 0, 0], 'MarkerEdgeColor', 'none');
                 hold(ax, 'on');
                 scatter(ax, lp(1, 2) + center(1), lp(2, 2) + center(2), 72*linewidth,...
-                    'MarkerFaceColor', [0.5, 0, 0], 'MarkerEdgeColor', 'none');
+                    'MarkerFaceColor', [1, 0.7, 0.7], 'MarkerEdgeColor', 'none');
                 hold(ax, 'on');
             end
             lp = r60 * lp;

@@ -144,8 +144,7 @@ classdef TBG < handle
             end
             % init
             init(obj, cm = nvargs.cm, cn = nvargs.cn, w = nvargs.w,...
-                cutoff = nvargs.cutoff, display = nvargs.display);
-            display_info(obj);  
+                cutoff = nvargs.cutoff, display = nvargs.display); 
             toc
         end
         
@@ -290,7 +289,6 @@ classdef TBG < handle
 
             % prepare 3d mesh
             % TODO improve to hexagons shape
-
             obj.display_info();
 
         end

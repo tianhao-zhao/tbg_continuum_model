@@ -134,10 +134,6 @@ classdef TBG < handle
             if isfield(nvargs, 'cm') && isfield(nvargs, 'cn')
                 obj.cm = nvargs.cm;
                 obj.cn = nvargs.cn;
-                if obj.cm < obj.cn
-                    ME = MException('init:invalidInput', 'cm should be greater than cn.');
-                    throw(ME);
-                end
             elseif ~isfield(nvargs, 'cm') && ~isfield(nvargs, 'cn')
                 fprintf('Caution, using default (m, n) = (%d, %d)\n',...
                     obj.cm, obj.cn)
@@ -416,24 +412,18 @@ classdef TBG < handle
             hold off;
         end
         
-        function fig = plot_real_space_lattice(obj, highlight, hs)
-            arguments
-                obj;
-                highlight = 1;
-                % horizontal shift
-                hs = [0, 0];
-            end
+        function plot_real_space_lattice(obj)
             fig = figure();
             ax = axes(fig);
-            set(fig, 'Name', sprintf('Real space (m,n) = (%d, %d)',...
+            set(fig1, 'Name', sprintf('Real space (m,n) = (%d, %d)',...
                 obj.cm, obj.cn));
-            scale = ceil(norm(obj.A1) / norm(obj.a1l1));
-            plot_hexagons(ax, obj.a1l1, obj.a2l1, 'r', scale, 1, false,...
-                highlight=highlight, lw=1, shift=hs);
-            plot_hexagons(ax, obj.a1l2, obj.a2l2, 'b', scale, 1, false,...
-                highlight=highlight, lw=1);
-            plot_hexagons(ax, obj.A1, obj.A2, [0.5, 0.5, 0.5], 1, 1, false);
+            
+            plot_hexagons(ax1, obj.a1l1, ojb.a2l1, 'r', 1, 1, false, highlight=1);
+            plot_hexagons(ax1, oa1l2, a2l2, 'b', 1, 1, false, highlight=1);
+            plot_hexagons(ax1, A1, A2, [0.5, 0.5, 0.5], 1, 1, false);
         end
+
+
     end
 end
 

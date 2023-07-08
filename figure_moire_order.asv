@@ -1,0 +1,24 @@
+tbg1 = TBG(cm=3, cn=2);
+tbg2 = TBG(cm=7, cn=5);
+tbg3 = TBG(cm=10, cn=7);
+fig1 = tbg1.plot_real_space_lattice(0);
+fig2 = tbg2.plot_real_space_lattice(0);
+fig3 = tbg3.plot_real_space_lattice(0);
+
+ax1 = fig1.Children;
+ax2 = fig2.Children;
+ax3 = fig3.Children;
+
+axis(ax1, 'off');
+axis(ax2, 'off');
+axis(ax3, 'off');
+
+tighten_margin(fig1, ax1);
+tighten_margin(fig2, ax2);
+tighten_margin(fig3, ax3);
+
+% add circles to label orders
+viscircles(ax1, [0, 0], norm(tbg1.a1l1), 'g', LineStyle='--', LineWidth=1);
+viscricles(ax1, (2*tbg.A2-tbg.A1)', norm(tbg.a1l1), [])
+viscircles(ax2, [0, 0], norm(tbg2.a1l1), 'g', LineStyle='--', LineWidth=1);
+viscircles(ax3, [0, 0], norm(tbg3.a1l1), 'g', LineStyle='--', LineWidth=1);

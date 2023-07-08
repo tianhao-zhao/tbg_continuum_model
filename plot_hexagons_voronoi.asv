@@ -26,8 +26,8 @@ function plot_hexagons_voronoi(ax, a1, a2, line_color, scale, mirrored,...
     unit_cell_cnt = 2;
     a1 = a1(:);
     a2 = a2(:);
-    grid_start = scale * (-unit_cell_cnt);
-    grid_end = scale * (unit_cell_cnt);
+    grid_start = scale * (-unitc);
+    grid_end = scale * (2);
     [x, y] = meshgrid(grid_start:grid_end);
     xy = [x(:), y(:)]';
     xyt = [a1, a2] * xy;
@@ -41,10 +41,7 @@ function plot_hexagons_voronoi(ax, a1, a2, line_color, scale, mirrored,...
     xt = mirrored * xt;
     yt = mirrored * yt;
     % try using voronoi limit
-    % bs_ext = unit_cell_cnt*[-a1-a2, a1-a2, a1+a2, -a1+a2]';
-    % [V,C,XY]=VoronoiLimit(xt,yt,'bs_ext',bs_ext);
-    % xv = V(1, :);
-    % yv = V(2, :);
+    ext_bc = []
     [xv, yv] = voronoi(xt(:), yt(:));
     plot(ax, xv, yv, '-', Color=line_color, LineWidth=nvargs.lw);
     hold(ax, 'on');

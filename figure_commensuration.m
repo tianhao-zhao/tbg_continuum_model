@@ -22,11 +22,12 @@ for n = 1:mn_lim
     for m = (n+1):mn_lim
         theta_1 = acos((n^2 + 4*n*m + m^2)/(2*(n^2 + n*m + m^2)));
         aMl1 = n*a1 + m*a2;
-        aMl2 = m*a1 + n*a2;
-        theta_2 = acos(aMl1*aMl2'/(norm(aMl1)*norm(aMl2)));
-        aM = norm(aMl2);
-        theta_aM((n-1)*mn_lim+m, :) = [theta_1*180/pi, aM];
-        %text(ax, theta_1, aM, sprintf("%d, %d", m, n));
+        aM = norm(aMl1);
+        theta_aM = [theta_aM;[theta_1*180/pi, aM/norm(a1)]];
+        if (m==2 && n==1) || (m==3 && n==2) ||...
+                (m==5 && n==3) || (m==4 && n==3)
+            text(ax, theta_1*180/pi + 0.5, aM/norm(a1) -1, sprintf("%d, %d", m, n));
+        end
         hold(ax, 'on');
     end
 end
@@ -36,12 +37,18 @@ hold(ax, 'on');
 
 theta = 0.01:0.001:1;
 for p = 1:p_max
-    plot(ax, theta*180/pi, norm(a1)*p/2*1./sin(theta/2));
+    plot(ax, theta*180/pi, p/2*1./sin(theta/2));
     hold(ax, 'on');
 end
 
 ax.XLim = [0, 30];
-ax.YLim = [0, 100];
+ax.YLim = [0, 55];
+xlabel(ax, "Rotation Angle (Degree)", "FontSize", 18);
+ylabel(ax, "|A_1|/|a_1|", "FontSize", 18);
+
+
 box(ax, 'on');
 
+tighten_margin(fig, ax);
+saveas(fig, '..\..\figures\commensurate_angles.png');
 

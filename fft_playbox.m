@@ -1,0 +1,9 @@
+xx = 0.001;
+x = 1:xx:10-xx;
+t = exp(-x);
+fig1 = figure();
+plot(axes(fig1), x, t);
+y = fft(x);
+fy = (0:length(y)-1)*1/xx*1/length(y);
+fig2 = figure();
+plot(axes(fig2), fy, abs(y));

@@ -400,7 +400,7 @@ classdef TBG < handle
         % function plot_3d(obj)
         % end
 
-        function ax_network = plot_network(obj)
+        function fig_network = plot_network(obj)
             fig_network = figure();
             ax_network = axes(fig_network);
             axis(ax_network, 'equal');
@@ -416,24 +416,46 @@ classdef TBG < handle
             hold off;
         end
         
-        function fig = plot_real_space_lattice(obj, highlight, hs)
+        function fig = plot_real_space_lattice(obj, highlight, hs, aa_or_ab)
             arguments
                 obj;
                 highlight = 1;
                 % horizontal shift
                 hs = [0, 0];
+                % if aa_or_ab == 1, the origin is ab stacking 
+                aa_or_ab = 0;
             end
             fig = figure();
             ax = axes(fig);
             set(fig, 'Name', sprintf('Real space (m,n) = (%d, %d)',...
                 obj.cm, obj.cn));
             scale = ceil(norm(obj.A1) / norm(obj.a1l1));
+            if aa_or_ab
+                ab_shift = 1/3*(obj.a1l2 + obj.a2l2);
+            else
+                ab_shift = [0, 0];
+            end
             plot_hexagons(ax, obj.a1l1, obj.a2l1, 'r', scale, 1, false,...
                 highlight=highlight, lw=1, shift=hs);
             plot_hexagons(ax, obj.a1l2, obj.a2l2, 'b', scale, 1, false,...
-                highlight=highlight, lw=1);
+                highlight=highlight, lw=1, shift=ab_shift);
             plot_hexagons(ax, obj.A1, obj.A2, [0.5, 0.5, 0.5], 1, 1, false);
         end
+
+        function fig = plot_reciprocal_lattice(obj)
+            arguments
+                obj;
+            end
+            fig = figure();
+            ax = axes(fig);
+            set(fig, 'Name', sprintf('Reciprocal space (m, n) = (%d, %d)',...
+                obj.cm, obj.cn));
+            scale = ceil(norm(obj.b1) / norm(obj.B1));
+            plot_hexagons(ax, obj.rm1*obj.b1, -obj.rm1*obj.b2, 'r', 1, 1, true);          
+            plot_hexagons(ax, obj.rm2*obj.b1, -obj.rm2*obj.b2, 'b', 1, 1, true);
+            plot_hexagons(ax, obj.B1, -obj.B2, [0.5, 0.5, 0.5], scale, 1, true);
+        end
+
     end
 end
 

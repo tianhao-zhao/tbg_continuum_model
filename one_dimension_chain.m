@@ -1,4 +1,4 @@
-function E = one_dimension_chain(unit_cell_size, k)
+function output = one_dimension_chain(unit_cell_size, k)
 %ONE_DIMENSION_CHAIN Summary of this function goes here
 %   Detailed explanation goes here
 % this function calculates a 1-d chain of identical atoms
@@ -25,7 +25,11 @@ function E = one_dimension_chain(unit_cell_size, k)
                 H(i, i+1) = H(i, i+1) + exp(-1i*ck);
             end
         end
-    E(:, ind) = eig(H);
+    [V, D] = eig(H);
+    E(:, ind) = diag(D);
+    output.E = E;
+    output.V = V;
+
     end
 end
 

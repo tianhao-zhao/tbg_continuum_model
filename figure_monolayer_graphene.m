@@ -37,15 +37,17 @@ for ii = 1:size(centers, 2)
 end
 
 % add a1 and a2 vectors
-quiver(ax1, [0, 0], [0, 0], as(1, :), as(2, :), AutoScale='off', LineWidth=2*lw);
+quiver(ax1, [0, 0], [0, 0], as(1, :), as(2, :), AutoScale='off', LineWidth=2*lw,...
+    Color='k');
 hold(ax1, 'on');
 quiver(ax1, [0, 0, 0], -sqrt(3)*[1, 1, 1],...
-    [1, -1/2, -1/2], [0, sqrt(3)/2, -sqrt(3)/2], AutoScale='off', LineWidth=2*lw);
+    [1, -1/2, -1/2], [0, sqrt(3)/2, -sqrt(3)/2], AutoScale='off', LineWidth=2*lw,...
+    Color='r');
 hold(ax1, 'on');
 % plot unit cell of A and B
-line(ax1, a*[-2, -1/2, 1, -1/2, -2], a*[0, sqrt(3)/2, 0, -sqrt(3)/2, 0], 'LineStyle', '--',...
-    'LineWidth', 2*lw, 'Color', [0.5, 0.5, 0.5]);
-hold(ax1, 'on');
+% line(ax1, a*[-2, -1/2, 1, -1/2, -2], a*[0, sqrt(3)/2, 0, -sqrt(3)/2, 0], 'LineStyle', '--',...
+%     'LineWidth', 2*lw, 'Color', [0.5, 0.5, 0.5]);
+% hold(ax1, 'on');
 line(ax1, a*[0, 3/2, 3, 3/2, 0], a*[0, sqrt(3)/2, 0, -sqrt(3)/2, 0], 'LineStyle', '--',...
     'LineWidth', 2*lw, 'Color', [0.5, 0.5, 0.5]);
 hold(ax1, 'on');
@@ -63,7 +65,7 @@ text(ax1, -0.25, -2.3, '\delta_3', FontSize=18*lw);
 hold(ax1, 'off');
 
 axis(ax1, 'off');
-ax1.XLim = [-3.1, 3.2];
+ax1.XLim = [-2.5, 3.5];
 ax1.YLim = [-4.1, 2.2];
 
 %ax1.Title.String = '(a) Crystal lattice';
@@ -74,11 +76,12 @@ b1 = a * sqrt(3)/2 * [1; sqrt(3)];
 b2 = a * sqrt(3)/2 * [1; -sqrt(3)];
 bs = [b1, b2];
 
-quiver(ax2, [0, 0], [0, 0], bs(1, :), bs(2, :), 'AutoScale', 'off', LineWidth=2*lw);
+quiver(ax2, [0, 0], [0, 0], bs(1, :), bs(2, :), 'AutoScale', 'off', LineWidth=2*lw,...
+    Color='k');
 hold(ax2, 'on');
 
-text(ax2, 0.4, 1.1, 'b_1', FontSize=18*lw);
-text(ax2, 0.4, -1, 'b_2', FontSize=18*lw);
+text(ax2, 0.4, 1.1, 'b_2', FontSize=18*lw);
+text(ax2, 0.4, -1, 'b_1', FontSize=18*lw);
 text(ax2, 0.9, 0.5, 'K', FontSize=18*lw);
 text(ax2, 0.9, -0.5, "K'", FontSize=18*lw);
 hold(ax2, 'off');

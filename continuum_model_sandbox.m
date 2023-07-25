@@ -51,8 +51,8 @@ K = 2 * pi / a * [1/3; sqrt(3)/9];
 Kp = 2 * pi / a * [1/3; -sqrt(3)/9];
 
 % commensurate index and angle
-cm = 3;
-cn = 2;
+cm = 7;
+cn = 4;
 ctheta = acos((cn^2 + 4*cn*cm + cm^2)/(2 * (cn^2 + cn*cm + cm^2)));
 % rotation matrix
 % note that layer2 is rotated counterclockwise ctheta

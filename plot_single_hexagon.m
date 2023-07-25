@@ -1,6 +1,15 @@
-function plot_single_hexagon(ax, center, l, r, highlight, linewidth)
+function plot_single_hexagon(ax, center, l, r, highlight, linewidth, color)
 % plot a hexagon in the ceter with l edge length
 % rotated by r (radius degree)
+arguments
+    ax;
+    center;
+    l;
+    r;
+    highlight;
+    linewidth;
+    color = [0, 0, 0];
+end
     center = center(:);
     rm = [[cos(r), -sin(r)]; [sin(r), cos(r)]];
     a60 = pi / 3;
@@ -10,7 +19,7 @@ function plot_single_hexagon(ax, center, l, r, highlight, linewidth)
     le = rm*[l/2; sqrt(3)*l/2];
     lp = [ls, le];
     for ii = 1:6
-        line(ax, lp(1, :) + center(1), lp(2, :) + center(2), 'Color', 'black',...
+        line(ax, lp(1, :) + center(1), lp(2, :) + center(2), 'Color', color,...
             'LineWidth', linewidth); 
         hold(ax, 'on');
         lp = r60 * lp;

@@ -5,6 +5,7 @@ classdef CM < handle
     properties
         % almost fixed constants
         tol = 1e-8;
+        electron = 1.6e-19;
 
         % parameters
         theta;
@@ -38,7 +39,16 @@ classdef CM < handle
         g_network2;
         m1;
         m2;
+        m;
         H;
+
+        % magnetic field 
+        % cutoff number of hermite states |n>
+        N_B;
+        % a and a^dagger operators
+        a_B;
+        ad_B;
+        H_B;
     end
     
     methods
@@ -50,9 +60,10 @@ classdef CM < handle
                 nvargs.a = 1.4e-10;
                 nvargs.vF = 0.866e6;
                 nvargs.hbar = 1.05e-34;
+                nvargs.N_B = 40;
             end
             obj.init(theta=nvargs.theta, w=nvargs.w, cutoff=nvargs.cutoff,...
-                a=nvargs.a, vF=nvargs.vF, hbar=nvargs.hbar);
+                a=nvargs.a, vF=nvargs.vF, hbar=nvargs.hbar, N_B=nvargs.N_B);
         end
         
         function init(obj, nvargs)
@@ -64,6 +75,7 @@ classdef CM < handle
                 nvargs.a;
                 nvargs.vF;
                 nvargs.hbar;
+                nvargs.N_B;
             end
             if isfield(nvargs, 'theta')
                 obj.theta = nvargs.theta;
@@ -82,6 +94,9 @@ classdef CM < handle
             end
             if isfield(nvargs, 'hbar')
                 obj.hbar = nvargs.hbar;
+            end
+            if isfield(nvargs, 'N_B')
+                obj.N_B = nvargs.N_B;
             end
             % assume all property are defined
             % use property to calculate everything ready
@@ -117,6 +132,12 @@ classdef CM < handle
             obj.build_g_network;
             obj.H = zeros(2*(obj.m1 + obj.m2));
             obj.build_h_inter;
+
+            % prepare for magnetic calculation
+            obj.a_B = diag(sqrt(1:obj.N_B-1), -1);
+            obj.ad_B = diag(sqrt(1:obj.N_B-1), 1);
+            obj.H_B = zeros(2*obj.m*obj.N_B);
+            obj.build_h_b_inter();
         end
 
         function build_g_network(obj)
@@ -136,14 +157,12 @@ classdef CM < handle
                 obj.cutoff * norm(obj.KD));
             obj.m1 = size(obj.g_network1, 2);
             obj.m2 = size(obj.g_network2, 2);
+            obj.m = obj.m1 + obj.m2;
         end
 
-        function build_h_inter(obj, dimension)
-            % TODO
-            % change code to be compatible with dimen > 1
+        function build_h_inter(obj)
             arguments
                 obj;
-                dimension = 1;
             end
             T_dim = size(obj.Tjs, 1);
             H_inter = zeros(obj.m1*T_dim, obj.m2*T_dim);
@@ -158,15 +177,14 @@ classdef CM < handle
                     end
                 end
             end
-            obj.H(1:(2*obj.m1), (1+2*obj.m1):(2*(obj.m1+obj.m2))) = H_inter;
-            obj.H((1+2*obj.m1):(2*(obj.m1+obj.m2)), 1:(2*obj.m1)) = H_inter';
+            obj.H(1:(2*obj.m1), (1+2*obj.m1):(2*(obj.m))) = H_inter;
+            obj.H((1+2*obj.m1):(2*(obj.m)), 1:(2*obj.m1)) = H_inter';
         end
         
-        function build_h_intra1(obj, q, dimension)
+        function build_h_intra1(obj, q)
             arguments
                 obj;
                 q;
-                dimension = 1;
             end
             q = q(:);
             for i = 1:obj.m1
@@ -178,11 +196,10 @@ classdef CM < handle
             end
         end
 
-        function build_h_intra2(obj, q, dimension)
+        function build_h_intra2(obj, q)
             arguments
                 obj;
                 q;
-                dimension = 1;
             end
             q = q(:);
             for i = 1:obj.m2
@@ -201,7 +218,7 @@ classdef CM < handle
             elseif size(q, 1) < 2
                 q = q';
             end
-            E = zeros(2*(obj.m1+obj.m2), size(q, 2));
+            E = zeros(2*(obj.m), size(q, 2));
             for i = 1:size(q, 2)
                 obj.build_h_intra1(q(:, i));
                 obj.build_h_intra2(q(:, i));
@@ -209,7 +226,73 @@ classdef CM < handle
                 E(:, i) = e;
             end
         end
+        
+        % TODO
+        % find a way to utilize conjugate and quickly build matrix
 
+
+        % functions for calculating landau levels under magnetic field
+        % B unit: T
+        % for layer 1, it is a and ad
+        % for layer 2, it is a - kd and ad - kd
+        % for now, rotation is not included e^(itheta_K)
+        function build_h_b_intra1(obj, B)
+            lc = sqrt(obj.hbar/(obj.electron*B));
+            for i = 1:obj.m1
+                obj.H_B((1:obj.N_B)+2*(i-1)*obj.N_B, (obj.N_B+1:2*obj.N_B)+2*(i-1)*obj.N_B) =...
+                    obj.hbar*obj.vF*(sqrt(2)/lc * obj.a_B);
+                obj.H_B((obj.N_B+1:2*obj.N_B)+2*(i-1)*obj.N_B, (1:obj.N_B)+2*(i-1)*obj.N_B) =...
+                    obj.hbar*obj.vF*(sqrt(2)/lc * obj.ad_B);
+            end
+        end
+       
+        function build_h_b_intra2(obj, B)
+            lc = sqrt(obj.hbar/(obj.electron*B));
+            for i = 1:obj.m2
+                obj.H_B((1:obj.N_B)+2*(i-1+obj.m1)*obj.N_B, (obj.N_B+1:2*obj.N_B)+2*(i-1+obj.m1)*obj.N_B) =...
+                    obj.hbar*obj.vF*(sqrt(2)/lc * obj.a_B -...
+                    (obj.KD(1) - 1i*obj.KD(2))*eye(obj.N_B));
+                obj.H_B((obj.N_B+1:2*obj.N_B)+2*(i-1+obj.m1)*obj.N_B, (1:obj.N_B)+2*(i-1+obj.m1)*obj.N_B) =...
+                    obj.hbar*obj.vF*(sqrt(2)/lc * obj.ad_B -...
+                    (obj.KD(1) + 1i*obj.KD(2))*eye(obj.N_B));
+            end
+        end
+        
+        % this is not dependent on B
+        % should only be called once
+        % same code with build_h_inter
+        function build_h_b_inter(obj)
+            T_dim = size(obj.Tjs, 1);
+            H_inter_B = zeros(obj.m1*T_dim*obj.N_B, obj.m2*T_dim*obj.N_B);
+            for i = 1:obj.m1
+                for j = 1:obj.m2
+                    for t_ind = 1:size(obj.tjs, 2)
+                        if obj.compare_vectors(obj.g_network1(:,i) - obj.g_network2(:, j),...
+                                obj.tjs(:, t_ind), obj.tol)
+                            H_inter_B((1+(i-1)*T_dim*obj.N_B):i*T_dim*obj.N_B,...
+                            (1+(j-1)*T_dim*obj.N_B):j*T_dim*obj.N_B) =...
+                            obj.w * [obj.Tjs(1, 1, t_ind) * eye(obj.N_B),...
+                            obj.Tjs(1, 2, t_ind) * eye(obj.N_B);...
+                            obj.Tjs(2, 1, t_ind) * eye(obj.N_B),...
+                            obj.Tjs(2, 2, t_ind) * eye(obj.N_B)];
+                        end
+                    end
+                end
+            end
+            obj.H_B(1:(2*obj.m1*obj.N_B), (1+2*obj.m1*obj.N_B):(2*obj.m*obj.N_B)) = H_inter_B;
+            obj.H_B((1+2*obj.m1*obj.N_B):(2*obj.m*obj.N_B), 1:(2*obj.m1*obj.N_B)) = H_inter_B';
+        end
+
+        function E = calculate_e_b(obj, Bs)
+            Bs = Bs(:);
+            E = zeros(size(obj.H_B, 1), numel(Bs));
+            for i = 1:numel(Bs)
+                obj.build_h_b_intra1(Bs(i));
+                obj.build_h_b_intra2(Bs(i));
+                E(:, i) = eig(obj.H_B);
+            end
+        end
+        % functions for plotting
         function [fig, ax] = plot_kgammamk(obj)
             fig = figure();
             ax = axes(fig);
@@ -225,7 +308,8 @@ classdef CM < handle
                 norm(q_gamma-q_k)+norm(q_m-q_gamma)+norm(q_kp-q_m)*q_steps];
             E = obj.calculate_e(q);
             E_len = size(E, 1);
-            for i = (E_len/2-4):(E_len/2+5)
+            num_of_bands_shown = floor(min(5, E_len/2));
+            for i = (E_len/2-num_of_bands_shown+1):(E_len/2+num_of_bands_shown)
                 plot(ax, q_len, E(i, :));
                 hold(ax, 'on');
             end
@@ -241,7 +325,8 @@ classdef CM < handle
             fig = figure();
             ax = axes(fig);
             E_len = size(E, 1);
-            for i = (E_len/2-1):(E_len/2+2)
+            num_of_bands_shown = floor(min(2, E_len/2));
+            for i = (E_len/2-num_of_bands_shown + 1):(E_len/2+num_of_bands_shown)
                 surf(ax, reshape(xx, sx), reshape(yy, sx), reshape(E(i, :), sx));
                 hold(ax, 'on');
             end
@@ -250,6 +335,7 @@ classdef CM < handle
         function info(obj)
             disp(obj.theta);
             disp(obj.w / (1.6e-16) * 1000);
+            disp(obj.N_B);
         end
 
         function run_test(obj)
@@ -261,8 +347,19 @@ classdef CM < handle
             scatter(ax1, obj.g_network2(1, :), obj.g_network2(2, :));
             axis (ax1, 'equal');
             % disp(obj.H)
-            %obj.plot_3d;
+            obj.plot_3d;
             obj.plot_kgammamk;
+
+            tic;
+            Bs = 1:20;
+            E = obj.calculate_e_b(Bs);
+            fig_b = figure();
+            ax_b = axes(fig_b);
+            for i = 1:size(E, 1)
+                plot(ax_b, Bs, E(i, :)/obj.electron);
+                hold(ax_b, 'on');
+            end
+            toc;
         end
     end
     methods(Static)

@@ -10,6 +10,8 @@ classdef CM < handle
         % parameters
         theta;
         w;
+        % corrugation and strain correction
+        cc;
         cutoff;
         a;
         vF;
@@ -56,13 +58,14 @@ classdef CM < handle
             arguments
                 nvargs.theta = 1.1;
                 nvargs.w = 1.6e-19*110e-3;
+                nvargs.cc = 1;
                 nvargs.cutoff = 8;
                 nvargs.a = 1.4e-10;
                 nvargs.vF = 0.866e6;
                 nvargs.hbar = 1.05e-34;
                 nvargs.N_B = 40;
             end
-            obj.init(theta=nvargs.theta, w=nvargs.w, cutoff=nvargs.cutoff,...
+            obj.init(theta=nvargs.theta, w=nvargs.w, cc = nvargs.cc, cutoff=nvargs.cutoff,...
                 a=nvargs.a, vF=nvargs.vF, hbar=nvargs.hbar, N_B=nvargs.N_B);
         end
         
@@ -71,6 +74,7 @@ classdef CM < handle
                 obj;
                 nvargs.theta;
                 nvargs.w;
+                nvargs.cc;
                 nvargs.cutoff;
                 nvargs.a;
                 nvargs.vF;
@@ -82,6 +86,9 @@ classdef CM < handle
             end
             if isfield(nvargs, 'w')
                 obj.w = nvargs.w;
+            end
+            if isfield(nvargs, 'cc')
+                obj.cc = nvargs.cc;
             end
             if isfield(nvargs, 'cutoff')
                 obj.cutoff = nvargs.cutoff;
@@ -122,9 +129,9 @@ classdef CM < handle
             obj.gjs = [g1, g2, g3];
             obj.tjs = obj.KD + obj.gjs;
             obj.w_phase = exp(1i*2*pi/3);
-            T1 = [[1, 1]; [1, 1]];
-            T2 = [[1, obj.w_phase]; [obj.w_phase', 1]];
-            T3 = [[1, obj.w_phase']; [obj.w_phase, 1]];
+            T1 = [[obj.cc*1, 1]; [1, obj.cc*1]];
+            T2 = [[obj.cc*1, obj.w_phase]; [obj.w_phase', obj.cc*1]];
+            T3 = [[obj.cc*1, obj.w_phase']; [obj.w_phase, obj.cc*1]];
             obj.Tjs(:, :, 1) = T1;
             obj.Tjs(:, :, 2) = T2;
             obj.Tjs(:, :, 3) = T3;
@@ -133,11 +140,11 @@ classdef CM < handle
             obj.H = zeros(2*(obj.m1 + obj.m2));
             obj.build_h_inter;
 
-            % prepare for magnetic calculation
-            obj.a_B = diag(sqrt(1:obj.N_B-1), -1);
-            obj.ad_B = diag(sqrt(1:obj.N_B-1), 1);
-            obj.H_B = zeros(2*obj.m*obj.N_B);
-            obj.build_h_b_inter();
+            % % prepare for magnetic calculation
+            % obj.a_B = diag(sqrt(1:obj.N_B-1), -1);
+            % obj.ad_B = diag(sqrt(1:obj.N_B-1), 1);
+            % obj.H_B = zeros(2*obj.m*obj.N_B);
+            % obj.build_h_b_inter();
         end
 
         function build_g_network(obj)
@@ -230,68 +237,69 @@ classdef CM < handle
         % TODO
         % find a way to utilize conjugate and quickly build matrix
 
+        % see LL.m for nonzero field calculation
+        % % functions for calculating landau levels under magnetic field
+        % % B unit: T
+        % % for layer 1, it is a and ad
+        % % for layer 2, it is a - kd and ad - kd
+        % % for now, rotation is not included e^(itheta_K)
+        % function build_h_b_intra1(obj, B)
+        %     lc = sqrt(obj.hbar/(obj.electron*B));
+        %     for i = 1:obj.m1
+        %         obj.H_B((1:obj.N_B)+2*(i-1)*obj.N_B, (obj.N_B+1:2*obj.N_B)+2*(i-1)*obj.N_B) =...
+        %             obj.hbar*obj.vF*(sqrt(2)/lc * obj.a_B);
+        %         obj.H_B((obj.N_B+1:2*obj.N_B)+2*(i-1)*obj.N_B, (1:obj.N_B)+2*(i-1)*obj.N_B) =...
+        %             obj.hbar*obj.vF*(sqrt(2)/lc * obj.ad_B);
+        %     end
+        % end
+        % 
+        % function build_h_b_intra2(obj, B)
+        %     lc = sqrt(obj.hbar/(obj.electron*B));
+        %     for i = 1:obj.m2
+        %         obj.H_B((1:obj.N_B)+2*(i-1+obj.m1)*obj.N_B, (obj.N_B+1:2*obj.N_B)+2*(i-1+obj.m1)*obj.N_B) =...
+        %             obj.hbar*obj.vF*(sqrt(2)/lc * obj.a_B -...
+        %             (obj.KD(1) - 1i*obj.KD(2))*eye(obj.N_B));
+        %         obj.H_B((obj.N_B+1:2*obj.N_B)+2*(i-1+obj.m1)*obj.N_B, (1:obj.N_B)+2*(i-1+obj.m1)*obj.N_B) =...
+        %             obj.hbar*obj.vF*(sqrt(2)/lc * obj.ad_B -...
+        %             (obj.KD(1) + 1i*obj.KD(2))*eye(obj.N_B));
+        %     end
+        % end
+        % 
+        % % this is not dependent on B
+        % % should only be called once
+        % % same code with build_h_inter
+        % function build_h_b_inter(obj)
+        %     T_dim = size(obj.Tjs, 1);
+        %     H_inter_B = zeros(obj.m1*T_dim*obj.N_B, obj.m2*T_dim*obj.N_B);
+        %     for i = 1:obj.m1
+        %         for j = 1:obj.m2
+        %             for t_ind = 1:size(obj.tjs, 2)
+        %                 if obj.compare_vectors(obj.g_network1(:,i) - obj.g_network2(:, j),...
+        %                         obj.tjs(:, t_ind), obj.tol)
+        %                     H_inter_B((1+(i-1)*T_dim*obj.N_B):i*T_dim*obj.N_B,...
+        %                     (1+(j-1)*T_dim*obj.N_B):j*T_dim*obj.N_B) =...
+        %                     obj.w * [obj.Tjs(1, 1, t_ind) * eye(obj.N_B),...
+        %                     obj.Tjs(1, 2, t_ind) * eye(obj.N_B);...
+        %                     obj.Tjs(2, 1, t_ind) * eye(obj.N_B),...
+        %                     obj.Tjs(2, 2, t_ind) * eye(obj.N_B)];
+        %                 end
+        %             end
+        %         end
+        %     end
+        %     obj.H_B(1:(2*obj.m1*obj.N_B), (1+2*obj.m1*obj.N_B):(2*obj.m*obj.N_B)) = H_inter_B;
+        %     obj.H_B((1+2*obj.m1*obj.N_B):(2*obj.m*obj.N_B), 1:(2*obj.m1*obj.N_B)) = H_inter_B';
+        % end
+        % 
+        % function E = calculate_e_b(obj, Bs)
+        %     Bs = Bs(:);
+        %     E = zeros(size(obj.H_B, 1), numel(Bs));
+        %     for i = 1:numel(Bs)
+        %         obj.build_h_b_intra1(Bs(i));
+        %         obj.build_h_b_intra2(Bs(i));
+        %         E(:, i) = eig(obj.H_B);
+        %     end
+        % end
 
-        % functions for calculating landau levels under magnetic field
-        % B unit: T
-        % for layer 1, it is a and ad
-        % for layer 2, it is a - kd and ad - kd
-        % for now, rotation is not included e^(itheta_K)
-        function build_h_b_intra1(obj, B)
-            lc = sqrt(obj.hbar/(obj.electron*B));
-            for i = 1:obj.m1
-                obj.H_B((1:obj.N_B)+2*(i-1)*obj.N_B, (obj.N_B+1:2*obj.N_B)+2*(i-1)*obj.N_B) =...
-                    obj.hbar*obj.vF*(sqrt(2)/lc * obj.a_B);
-                obj.H_B((obj.N_B+1:2*obj.N_B)+2*(i-1)*obj.N_B, (1:obj.N_B)+2*(i-1)*obj.N_B) =...
-                    obj.hbar*obj.vF*(sqrt(2)/lc * obj.ad_B);
-            end
-        end
-       
-        function build_h_b_intra2(obj, B)
-            lc = sqrt(obj.hbar/(obj.electron*B));
-            for i = 1:obj.m2
-                obj.H_B((1:obj.N_B)+2*(i-1+obj.m1)*obj.N_B, (obj.N_B+1:2*obj.N_B)+2*(i-1+obj.m1)*obj.N_B) =...
-                    obj.hbar*obj.vF*(sqrt(2)/lc * obj.a_B -...
-                    (obj.KD(1) - 1i*obj.KD(2))*eye(obj.N_B));
-                obj.H_B((obj.N_B+1:2*obj.N_B)+2*(i-1+obj.m1)*obj.N_B, (1:obj.N_B)+2*(i-1+obj.m1)*obj.N_B) =...
-                    obj.hbar*obj.vF*(sqrt(2)/lc * obj.ad_B -...
-                    (obj.KD(1) + 1i*obj.KD(2))*eye(obj.N_B));
-            end
-        end
-        
-        % this is not dependent on B
-        % should only be called once
-        % same code with build_h_inter
-        function build_h_b_inter(obj)
-            T_dim = size(obj.Tjs, 1);
-            H_inter_B = zeros(obj.m1*T_dim*obj.N_B, obj.m2*T_dim*obj.N_B);
-            for i = 1:obj.m1
-                for j = 1:obj.m2
-                    for t_ind = 1:size(obj.tjs, 2)
-                        if obj.compare_vectors(obj.g_network1(:,i) - obj.g_network2(:, j),...
-                                obj.tjs(:, t_ind), obj.tol)
-                            H_inter_B((1+(i-1)*T_dim*obj.N_B):i*T_dim*obj.N_B,...
-                            (1+(j-1)*T_dim*obj.N_B):j*T_dim*obj.N_B) =...
-                            obj.w * [obj.Tjs(1, 1, t_ind) * eye(obj.N_B),...
-                            obj.Tjs(1, 2, t_ind) * eye(obj.N_B);...
-                            obj.Tjs(2, 1, t_ind) * eye(obj.N_B),...
-                            obj.Tjs(2, 2, t_ind) * eye(obj.N_B)];
-                        end
-                    end
-                end
-            end
-            obj.H_B(1:(2*obj.m1*obj.N_B), (1+2*obj.m1*obj.N_B):(2*obj.m*obj.N_B)) = H_inter_B;
-            obj.H_B((1+2*obj.m1*obj.N_B):(2*obj.m*obj.N_B), 1:(2*obj.m1*obj.N_B)) = H_inter_B';
-        end
-
-        function E = calculate_e_b(obj, Bs)
-            Bs = Bs(:);
-            E = zeros(size(obj.H_B, 1), numel(Bs));
-            for i = 1:numel(Bs)
-                obj.build_h_b_intra1(Bs(i));
-                obj.build_h_b_intra2(Bs(i));
-                E(:, i) = eig(obj.H_B);
-            end
-        end
         % functions for plotting
         function [fig, ax] = plot_kgammamk(obj)
             fig = figure();
@@ -310,9 +318,16 @@ classdef CM < handle
             E_len = size(E, 1);
             num_of_bands_shown = floor(min(5, E_len/2));
             for i = (E_len/2-num_of_bands_shown+1):(E_len/2+num_of_bands_shown)
-                plot(ax, q_len, E(i, :));
+                plot(ax, q_len, E(i, :)/obj.electron, Color='k');
                 hold(ax, 'on');
             end
+            line_ticks = q_len([1, q_num_of_steps*[1:3]]);
+            xticks(ax, line_ticks);
+            xticklabels(ax, {'K_M', '\Gamma', 'M_M', 'K''_M'});
+            xlim([0, q_len(length(q_len))]);
+            xline(line_ticks(2:3), Color=[0.5, 0.5, 0.5]);
+            plot(ax, q_len(1:q_num_of_steps), q_len(1:q_num_of_steps)*...
+                obj.hbar*obj.vF/obj.electron, '--', Color='r');
         end
 
         function plot_3d(obj)
@@ -333,9 +348,15 @@ classdef CM < handle
         end
     
         function info(obj)
+            disp('\theta =');
             disp(obj.theta);
+            disp('coupling w in eV =');
             disp(obj.w / (1.6e-16) * 1000);
-            disp(obj.N_B);
+            disp('vF in m/s =');
+            disp(obj.vF)
+            disp('corrugation correction ratio =')
+            disp(obj.cc);
+            % disp(obj.N_B);
         end
 
         function run_test(obj)
@@ -350,16 +371,16 @@ classdef CM < handle
             obj.plot_3d;
             obj.plot_kgammamk;
 
-            tic;
-            Bs = 1:20;
-            E = obj.calculate_e_b(Bs);
-            fig_b = figure();
-            ax_b = axes(fig_b);
-            for i = 1:size(E, 1)
-                plot(ax_b, Bs, E(i, :)/obj.electron);
-                hold(ax_b, 'on');
-            end
-            toc;
+            % tic;
+            % Bs = 1:20;
+            % E = obj.calculate_e_b(Bs);
+            % fig_b = figure();
+            % ax_b = axes(fig_b);
+            % for i = 1:size(E, 1)
+            %     plot(ax_b, Bs, E(i, :)/obj.electron);
+            %     hold(ax_b, 'on');
+            % end
+            % toc;
         end
     end
     methods(Static)

@@ -7,6 +7,7 @@ classdef LL < handle
         % lattice parameters
         a = 1.4e-10;
         w;
+        cc;
         vF = 0.866e6;
 
         % tuning parameters
@@ -53,6 +54,7 @@ classdef LL < handle
             arguments
                 nvargs.thetad = 2.5;
                 nvargs.w = 110e-3 * 1.6e-19;
+                nvargs.cc = 1;
                 nvargs.vF = 0.866e6;
                 nvargs.N_ll = 4;
             end
@@ -235,6 +237,10 @@ classdef LL < handle
         end
     
         % construct H given k1, k2, and rewrite obj.H
+        % TODO 
+        % run a profile on the code, which part is slow?
+        % find the pattern of matrix and try to use a quick 
+        % method to fill in all elements
         function construct_H(obj, k1, k2, info_mode)
             arguments
                 obj;

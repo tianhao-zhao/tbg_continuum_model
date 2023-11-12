@@ -11,7 +11,7 @@ classdef CM < handle
         theta;
         w;
         % corrugation and strain correction
-        cc;
+        eta;
         cutoff;
         a;
         vF;
@@ -58,14 +58,14 @@ classdef CM < handle
             arguments
                 nvargs.theta = 1.1;
                 nvargs.w = 1.6e-19*110e-3;
-                nvargs.cc = 1;
+                nvargs.eta = 1;
                 nvargs.cutoff = 8;
                 nvargs.a = 1.4e-10;
                 nvargs.vF = 0.866e6;
                 nvargs.hbar = 1.05e-34;
                 nvargs.N_B = 40;
             end
-            obj.init(theta=nvargs.theta, w=nvargs.w, cc = nvargs.cc, cutoff=nvargs.cutoff,...
+            obj.init(theta=nvargs.theta, w=nvargs.w, eta = nvargs.eta, cutoff=nvargs.cutoff,...
                 a=nvargs.a, vF=nvargs.vF, hbar=nvargs.hbar, N_B=nvargs.N_B);
         end
         
@@ -74,7 +74,7 @@ classdef CM < handle
                 obj;
                 nvargs.theta;
                 nvargs.w;
-                nvargs.cc;
+                nvargs.eta;
                 nvargs.cutoff;
                 nvargs.a;
                 nvargs.vF;
@@ -87,8 +87,8 @@ classdef CM < handle
             if isfield(nvargs, 'w')
                 obj.w = nvargs.w;
             end
-            if isfield(nvargs, 'cc')
-                obj.cc = nvargs.cc;
+            if isfield(nvargs, 'eta')
+                obj.eta = nvargs.eta;
             end
             if isfield(nvargs, 'cutoff')
                 obj.cutoff = nvargs.cutoff;
@@ -129,9 +129,9 @@ classdef CM < handle
             obj.gjs = [g1, g2, g3];
             obj.tjs = obj.KD + obj.gjs;
             obj.w_phase = exp(1i*2*pi/3);
-            T1 = [[obj.cc*1, 1]; [1, obj.cc*1]];
-            T2 = [[obj.cc*1, obj.w_phase]; [obj.w_phase', obj.cc*1]];
-            T3 = [[obj.cc*1, obj.w_phase']; [obj.w_phase, obj.cc*1]];
+            T1 = [[obj.eta*1, 1]; [1, obj.eta*1]];
+            T2 = [[obj.eta*1, obj.w_phase]; [obj.w_phase', obj.eta*1]];
+            T3 = [[obj.eta*1, obj.w_phase']; [obj.w_phase, obj.eta*1]];
             obj.Tjs(:, :, 1) = T1;
             obj.Tjs(:, :, 2) = T2;
             obj.Tjs(:, :, 3) = T3;
@@ -355,7 +355,7 @@ classdef CM < handle
             disp('vF in m/s =');
             disp(obj.vF)
             disp('corrugation correction ratio =')
-            disp(obj.cc);
+            disp(obj.eta);
             % disp(obj.N_B);
         end
 

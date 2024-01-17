@@ -27,13 +27,16 @@
 % end
 % tocBytes(gcp);
 
-tic;
-foo = 1.6;
-dp = zeros(20, 20);
-for n =1:20
-    for np = 1:n
-        dp(n, np) = laguerreL(np, n - np, foo);
-    end
+N = 10000;
+tt = zeros(1, N);
+for i = 1:N
+    tic;
+    laguerreL(i, i, 1);
+    cur_t = toc;
+    tt(i) = cur_t;
 end
-toc;
+fig = figure();
+ax = axes(fig);
+plot(ax, 1:N, tt);
+
 
